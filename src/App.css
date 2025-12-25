@@ -51,14 +51,12 @@
   transform: translate(0, -50%);
   background: transparent;
   border: none;
-  border-left: 2px solid var(--input-border);
   color: inherit;
   font-size: 1.2rem;
   font-family: inherit;
   outline: none;
   padding: 4px 8px;
   min-width: 100px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.2s ease-out;
   resize: none;
   overflow: hidden;

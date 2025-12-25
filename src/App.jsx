@@ -255,7 +255,7 @@ function App() {
         />
       )}
 
-      <div className="hint">Double click to add text. Shift + Enter for new line.</div>
+      <div className="hint">Double click to add text.</div>
     </div>
   );
 }
