@@ -3,8 +3,7 @@
   height: 100%;
   position: relative;
   cursor: text;
-  background-color: #000000;
-  /* Fallback */
+  background-color: var(--bg-color);
   transition: cursor 0.3s;
 }
 
@@ -15,7 +14,6 @@
 .text-item {
   position: absolute;
   transform: translate(0, -50%);
-  /* Center vertically on the click point */
   font-size: 1.2rem;
   white-space: pre-wrap;
   user-select: none;
@@ -23,10 +21,29 @@
   border-radius: 4px;
   transition: all 0.2s ease;
   cursor: default;
+  color: var(--text-color);
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, -50%) translateY(0px);
+  }
+
+  50% {
+    transform: translate(0, -50%) translateY(-15px);
+  }
+
+  100% {
+    transform: translate(0, -50%) translateY(0px);
+  }
 }
 
 .text-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--item-hover);
+  animation-play-state: paused;
+  /* Pause floating when hovering to make clicking easier */
+  z-index: 10;
 }
 
 .floating-input {
@@ -34,7 +51,7 @@
   transform: translate(0, -50%);
   background: transparent;
   border: none;
-  border-left: 2px solid #646cff;
+  border-left: 2px solid var(--input-border);
   color: inherit;
   font-size: 1.2rem;
   font-family: inherit;
@@ -43,6 +60,9 @@
   min-width: 100px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.2s ease-out;
+  resize: none;
+  overflow: hidden;
+  line-height: inherit;
 }
 
 @keyframes fadeIn {
@@ -62,7 +82,7 @@
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  opacity: 0.4;
+  color: var(--hint-color);
   font-size: 0.9rem;
   pointer-events: none;
   user-select: none;
@@ -71,4 +91,31 @@
 
 .app-container.idle .hint {
   opacity: 0;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  background: var(--text-color);
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: all 0.3s ease;
+  padding: 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.app-container.idle .theme-toggle {
+  opacity: 0;
+  pointer-events: none;
 }

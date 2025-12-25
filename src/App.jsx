@@ -15,8 +15,20 @@ function App() {
   });
   const [isIdle, setIsIdle] = useState(false);
   const idleTimerRef = useRef(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   const inputRef = useRef(null);
+
+  // Apply theme
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = (e) => {
+    e.stopPropagation(); // Don't trigger input
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   // Firebase connection
   useEffect(() => {
@@ -97,6 +109,60 @@ function App() {
     });
   };
 
+  // Drag state
+  const [dragItem, setDragItem] = useState(null);
+  const dragOffset = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e, item) => {
+    e.stopPropagation(); // Don't trigger background events
+    if (inputState.visible) return; // Don't drag if editing somewhere
+
+    setDragItem(item);
+    dragOffset.current = {
+      x: e.clientX - item.x,
+      y: e.clientY - item.y
+    };
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragItem) return;
+
+      const newX = e.clientX - dragOffset.current.x;
+      const newY = e.clientY - dragOffset.current.y;
+
+      // Optimistic update locally
+      setItems(prev => prev.map(it =>
+        it.id === dragItem.id ? { ...it, x: newX, y: newY } : it
+      ));
+    };
+
+    const handleMouseUp = (e) => {
+      if (!dragItem) return;
+
+      // Final save to Firebase
+      const finalX = e.clientX - dragOffset.current.x;
+      const finalY = e.clientY - dragOffset.current.y;
+
+      update(ref(db, `items/${dragItem.id}`), {
+        x: finalX,
+        y: finalY
+      });
+
+      setDragItem(null);
+    };
+
+    if (dragItem) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragItem]);
+
   const commitText = () => {
     const trimmed = inputState.value.trim();
     if (trimmed) {
@@ -124,20 +190,33 @@ function App() {
   };
 
   const handleKeyDown = (e) => {
+    // Save on Enter (without Shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       commitText();
     }
+    // Escape to cancel (or just close)
     if (e.key === 'Escape') {
       setInputState(prev => ({ ...prev, visible: false, value: '', editId: null }));
     }
   };
+
+  // Auto-resize textarea height
+  useEffect(() => {
+    if (inputState.visible && inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = inputRef.current.scrollHeight + 'px';
+    }
+  }, [inputState.value, inputState.visible]);
 
   return (
     <div
       className={`app-container ${isIdle ? 'idle' : ''}`}
       onDoubleClick={handleDoubleClick}
     >
+      <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+      </button>
+
       {items.map(item => {
         // Hide the item if it's currently being edited so it doesn't overlap with the input
         if (item.id === inputState.editId) return null;
@@ -146,8 +225,13 @@ function App() {
           <div
             key={item.id}
             className="text-item"
-            style={{ left: `${item.x}px`, top: `${item.y}px` }}
+            style={{
+              left: `${item.x}px`,
+              top: `${item.y}px`,
+              animationDelay: `${(item.id % 5000) / -1000}s` // Deterministic random delay based on ID
+            }}
             onDoubleClick={(e) => handleItemDoubleClick(e, item)}
+            onMouseDown={(e) => handleMouseDown(e, item)}
           >
             {item.text}
           </div>
@@ -155,19 +239,23 @@ function App() {
       })}
 
       {inputState.visible && (
-        <input
+        <textarea
           ref={inputRef}
           className="floating-input"
-          style={{ left: `${inputState.x}px`, top: `${inputState.y}px` }}
+          style={{
+            left: `${inputState.x}px`,
+            top: `${inputState.y}px`
+          }}
           value={inputState.value}
           onChange={(e) => setInputState(prev => ({ ...prev, value: e.target.value }))}
           onKeyDown={handleKeyDown}
           onBlur={commitText}
           placeholder="Type here..."
+          rows={1}
         />
       )}
 
-      <div className="hint">Double click anywhere to add text. Double click text to edit.</div>
+      <div className="hint">Double click to add text. Shift + Enter for new line.</div>
     </div>
   );
 }
