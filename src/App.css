@@ -1,0 +1,74 @@
+.app-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: text;
+  background-color: #000000;
+  /* Fallback */
+  transition: cursor 0.3s;
+}
+
+.app-container.idle {
+  cursor: none;
+}
+
+.text-item {
+  position: absolute;
+  transform: translate(0, -50%);
+  /* Center vertically on the click point */
+  font-size: 1.2rem;
+  white-space: pre-wrap;
+  user-select: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.text-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.floating-input {
+  position: absolute;
+  transform: translate(0, -50%);
+  background: transparent;
+  border: none;
+  border-left: 2px solid #646cff;
+  color: inherit;
+  font-size: 1.2rem;
+  font-family: inherit;
+  outline: none;
+  padding: 4px 8px;
+  min-width: 100px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(0, -40%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+.hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.4;
+  font-size: 0.9rem;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 1s ease;
+}
+
+.app-container.idle .hint {
+  opacity: 0;
+}
