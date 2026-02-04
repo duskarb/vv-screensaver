@@ -151,17 +151,19 @@ function App() {
       // Check trash collision
       if (trashRef.current) {
         const trashRect = trashRef.current.getBoundingClientRect();
-        // Simple center point collision check
+        const trashCenterX = trashRect.left + trashRect.width / 2;
+        const trashCenterY = trashRect.top + trashRect.height / 2;
+
         const itemCenterX = newX + dragOffset.current.width / 2;
         const itemCenterY = newY + dragOffset.current.height / 2;
 
-        const isOver = (
-          itemCenterX >= trashRect.left &&
-          itemCenterX <= trashRect.right &&
-          itemCenterY >= trashRect.top &&
-          itemCenterY <= trashRect.bottom
+        // Distance check (radius 60px for easier detection)
+        const distance = Math.sqrt(
+          Math.pow(itemCenterX - trashCenterX, 2) +
+          Math.pow(itemCenterY - trashCenterY, 2)
         );
-        setTrashHover(isOver);
+
+        setTrashHover(distance < 60);
       }
 
       setItems(prev => prev.map(it =>
