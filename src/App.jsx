@@ -113,9 +113,7 @@ function App() {
   // Drag state
   const [dragItem, setDragItem] = useState(null);
   const dragOffset = useRef({ x: 0, y: 0, width: 0, height: 0 });
-  const longPressTimer = useRef(null);
-  const lastTap = useRef({ time: 0, id: null });
-  const touchStartPos = useRef({ x: 0, y: 0 });
+
   const [trashHover, setTrashHover] = useState(false);
   const trashRef = useRef(null);
 
@@ -137,29 +135,7 @@ function App() {
     startDrag(e.clientX, e.clientY, item, e.currentTarget);
   };
 
-  const handleTouchStart = (e, item) => {
-    e.stopPropagation();
-    const touch = e.touches[0];
-    const now = Date.now();
 
-    if (lastTap.current.id === item.id && (now - lastTap.current.time) < 300) {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
-      handleItemDoubleClick(e, item);
-      lastTap.current = { time: 0, id: null };
-      return;
-    }
-
-    lastTap.current = { time: now, id: item.id };
-    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
-
-    longPressTimer.current = setTimeout(() => {
-      startDrag(touch.clientX, touch.clientY, item, e.currentTarget);
-      longPressTimer.current = null;
-    }, 300);
-  };
 
   useEffect(() => {
     const handleMove = (clientX, clientY) => {
@@ -226,42 +202,12 @@ function App() {
       if (dragItem) handleEnd(e.clientX, e.clientY);
     };
 
-    const onTouchMove = (e) => {
-      const touch = e.touches[0];
-      if (dragItem) {
-        handleMove(touch.clientX, touch.clientY);
-      } else if (longPressTimer.current) {
-        // Cancel hold if moved significantly
-        const dx = Math.abs(touch.clientX - touchStartPos.current.x);
-        const dy = Math.abs(touch.clientY - touchStartPos.current.y);
-        if (dx > 10 || dy > 10) {
-          clearTimeout(longPressTimer.current);
-          longPressTimer.current = null;
-        }
-      }
-    };
-
-    const onTouchEnd = (e) => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
-      if (dragItem) {
-        const touch = e.changedTouches[0];
-        handleEnd(touch.clientX, touch.clientY);
-      }
-    };
-
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
-    window.addEventListener('touchend', onTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [dragItem, trashHover]);
 
@@ -311,6 +257,32 @@ function App() {
     }
   }, [inputState.value, inputState.visible]);
 
+  const saveTimerRef = useRef(null);
+
+  const handleItemWheel = (e, item) => {
+    e.stopPropagation();
+    // Prevent browser zoom if using trackpad pinch (ctrlKey)
+    if (e.ctrlKey) e.preventDefault();
+
+    const delta = Math.sign(e.deltaY); // Scroll down (positive delta) means zoom in
+    const currentSize = item.fontSize || 20; // Default 20px
+    const newSize = Math.max(10, Math.min(200, currentSize + delta * 2)); // Limit between 10px and 200px
+
+    // 1. Update local state immediately for responsiveness
+    setItems(prev => prev.map(it =>
+      it.id === item.id ? { ...it, fontSize: newSize } : it
+    ));
+
+    // 2. Debounce Firebase update
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      update(ref(db, `items/${item.id}`), {
+        fontSize: newSize
+      });
+      saveTimerRef.current = null;
+    }, 500);
+  };
+
   return (
     <div
       className={`app-container ${isIdle ? 'idle' : ''}`}
@@ -330,11 +302,12 @@ function App() {
             style={{
               left: `${item.x}px`,
               top: `${item.y}px`,
-              animationDelay: `${(item.id % 5000) / -1000}s` // Deterministic random delay based on ID
+              animationDelay: `${(item.id % 5000) / -1000}s`, // Deterministic random delay based on ID
+              fontSize: `${item.fontSize || 20}px`
             }}
             onDoubleClick={(e) => handleItemDoubleClick(e, item)}
             onMouseDown={(e) => handleMouseDown(e, item)}
-            onTouchStart={(e) => handleTouchStart(e, item)}
+            onWheel={(e) => handleItemWheel(e, item)}
             onContextMenu={(e) => e.preventDefault()}
           >
             {item.text}
