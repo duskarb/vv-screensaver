@@ -9,6 +9,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
+      },
       manifest: {
         name: 'VV Idea Saver',
         short_name: 'VV Saver',
@@ -17,6 +22,8 @@ export default defineConfig({
         background_color: '#000000',
         display: 'fullscreen',
         orientation: 'landscape',
+        scope: '/vv-screensaver/',
+        start_url: '/vv-screensaver/',
         icons: [
           {
             src: 'pwa-192x192.png',
