@@ -112,55 +112,129 @@ function App() {
 
   // Drag state
   const [dragItem, setDragItem] = useState(null);
-  const dragOffset = useRef({ x: 0, y: 0 });
+  const dragOffset = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const longPressTimer = useRef(null);
+  const lastTap = useRef({ time: 0, id: null });
+  const touchStartPos = useRef({ x: 0, y: 0 });
 
-  const handleMouseDown = (e, item) => {
-    e.stopPropagation(); // Don't trigger background events
-    if (inputState.visible) return; // Don't drag if editing somewhere
+  const startDrag = (clientX, clientY, item, target) => {
+    if (inputState.visible) return;
 
+    const rect = target.getBoundingClientRect();
     setDragItem(item);
     dragOffset.current = {
-      x: e.clientX - item.x,
-      y: e.clientY - item.y
+      x: clientX - item.x,
+      y: clientY - item.y,
+      width: rect.width,
+      height: rect.height
     };
   };
 
+  const handleMouseDown = (e, item) => {
+    e.stopPropagation(); // Don't trigger background events
+    startDrag(e.clientX, e.clientY, item, e.currentTarget);
+  };
+
+  const handleTouchStart = (e, item) => {
+    e.stopPropagation();
+    const touch = e.touches[0];
+    const now = Date.now();
+
+    if (lastTap.current.id === item.id && (now - lastTap.current.time) < 300) {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      handleItemDoubleClick(e, item);
+      lastTap.current = { time: 0, id: null };
+      return;
+    }
+
+    lastTap.current = { time: now, id: item.id };
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+
+    longPressTimer.current = setTimeout(() => {
+      startDrag(touch.clientX, touch.clientY, item, e.currentTarget);
+      longPressTimer.current = null;
+    }, 300);
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!dragItem) return;
+    const handleMove = (clientX, clientY) => {
+      let newX = clientX - dragOffset.current.x;
+      let newY = clientY - dragOffset.current.y;
 
-      const newX = e.clientX - dragOffset.current.x;
-      const newY = e.clientY - dragOffset.current.y;
+      const maxX = window.innerWidth - dragOffset.current.width;
+      const maxY = window.innerHeight - dragOffset.current.height;
 
-      // Optimistic update locally
+      newX = Math.max(0, Math.min(newX, maxX));
+      newY = Math.max(0, Math.min(newY, maxY));
+
       setItems(prev => prev.map(it =>
         it.id === dragItem.id ? { ...it, x: newX, y: newY } : it
       ));
     };
 
-    const handleMouseUp = (e) => {
-      if (!dragItem) return;
+    const handleEnd = (clientX, clientY) => {
+      let finalX = clientX - dragOffset.current.x;
+      let finalY = clientY - dragOffset.current.y;
 
-      // Final save to Firebase
-      const finalX = e.clientX - dragOffset.current.x;
-      const finalY = e.clientY - dragOffset.current.y;
+      const maxX = window.innerWidth - dragOffset.current.width;
+      const maxY = window.innerHeight - dragOffset.current.height;
+
+      finalX = Math.max(0, Math.min(finalX, maxX));
+      finalY = Math.max(0, Math.min(finalY, maxY));
 
       update(ref(db, `items/${dragItem.id}`), {
         x: finalX,
         y: finalY
       });
-
       setDragItem(null);
     };
 
-    if (dragItem) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
+    const onMouseMove = (e) => {
+      if (dragItem) handleMove(e.clientX, e.clientY);
+    };
+    const onMouseUp = (e) => {
+      if (dragItem) handleEnd(e.clientX, e.clientY);
+    };
+
+    const onTouchMove = (e) => {
+      const touch = e.touches[0];
+      if (dragItem) {
+        handleMove(touch.clientX, touch.clientY);
+      } else if (longPressTimer.current) {
+        // Cancel hold if moved significantly
+        const dx = Math.abs(touch.clientX - touchStartPos.current.x);
+        const dy = Math.abs(touch.clientY - touchStartPos.current.y);
+        if (dx > 10 || dy > 10) {
+          clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+        }
+      }
+    };
+
+    const onTouchEnd = (e) => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      if (dragItem) {
+        const touch = e.changedTouches[0];
+        handleEnd(touch.clientX, touch.clientY);
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [dragItem]);
 
@@ -233,6 +307,8 @@ function App() {
             }}
             onDoubleClick={(e) => handleItemDoubleClick(e, item)}
             onMouseDown={(e) => handleMouseDown(e, item)}
+            onTouchStart={(e) => handleTouchStart(e, item)}
+            onContextMenu={(e) => e.preventDefault()}
           >
             {item.text}
           </div>

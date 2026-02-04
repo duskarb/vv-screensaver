@@ -5,6 +5,8 @@
   cursor: text;
   background-color: var(--bg-color);
   transition: cursor 0.3s;
+  overflow: hidden; /* Prevent dragging from causing scroll */
+  touch-action: none; /* Prevent browser zooming/scrolling on touch */
 }
 
 .app-container.idle {
@@ -19,10 +21,12 @@
   user-select: none;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  /* Only transition color/bg, NOT left/top to avoid drag lag */
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
   cursor: default;
   color: var(--text-color);
   animation: float 6s ease-in-out infinite;
+  touch-action: none; /* Prevent browser scrolling when dragging item */
 }
 
 @keyframes float {
