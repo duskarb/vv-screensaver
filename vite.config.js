@@ -17,8 +17,6 @@ export default defineConfig({
         background_color: '#000000',
         display: 'fullscreen',
         orientation: 'landscape',
-        scope: '/vv-screensaver/',
-        start_url: '/vv-screensaver/',
         icons: [
           {
             src: 'pwa-192x192.png',
