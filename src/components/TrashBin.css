@@ -1,0 +1,58 @@
+.trash-bin {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(200%);
+    width: 50px;
+    height: 50px;
+    background-color: var(--item-hover);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        opacity 0.3s ease,
+        background-color 0.2s ease,
+        color 0.2s ease,
+        width 0.2s ease,
+        height 0.2s ease;
+    z-index: 1000;
+    pointer-events: none;
+    /* Let drag events pass through for calculation in JS */
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trash-bin.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.trash-bin.active {
+    background-color: #ff3b30;
+    /* iOS warning red */
+    color: white;
+    transform: translateX(-50%) scale(1.2);
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 0 20px rgba(255, 59, 48, 0.5);
+    border-color: transparent;
+}
+
+.trash-bin svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s ease;
+}
+
+.trash-bin.active svg {
+    transform: scale(1.1);
+}
+
+/* Hide trash bin when idle */
+.app-container.idle .trash-bin {
+    opacity: 0 !important;
+    pointer-events: none;
+}

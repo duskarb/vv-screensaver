@@ -1,3 +1,5 @@
+@import './components/TrashBin.css';
+
 .app-container {
   width: 100%;
   height: 100%;
@@ -5,8 +7,10 @@
   cursor: text;
   background-color: var(--bg-color);
   transition: cursor 0.3s;
-  overflow: hidden; /* Prevent dragging from causing scroll */
-  touch-action: none; /* Prevent browser zooming/scrolling on touch */
+  overflow: hidden;
+  /* Prevent dragging from causing scroll */
+  touch-action: none;
+  /* Prevent browser zooming/scrolling on touch */
 }
 
 .app-container.idle {
@@ -26,7 +30,8 @@
   cursor: default;
   color: var(--text-color);
   animation: float 6s ease-in-out infinite;
-  touch-action: none; /* Prevent browser scrolling when dragging item */
+  touch-action: none;
+  /* Prevent browser scrolling when dragging item */
 }
 
 @keyframes float {
@@ -79,21 +84,7 @@
   }
 }
 
-.hint {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--hint-color);
-  font-size: 0.9rem;
-  pointer-events: none;
-  user-select: none;
-  transition: opacity 1s ease;
-}
 
-.app-container.idle .hint {
-  opacity: 0;
-}
 
 .theme-toggle {
   position: fixed;

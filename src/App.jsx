@@ -116,6 +116,8 @@ function App() {
   const longPressTimer = useRef(null);
   const lastTap = useRef({ time: 0, id: null });
   const touchStartPos = useRef({ x: 0, y: 0 });
+  const [trashHover, setTrashHover] = useState(false);
+  const trashRef = useRef(null);
 
   const startDrag = (clientX, clientY, item, target) => {
     if (inputState.visible) return;
@@ -170,12 +172,36 @@ function App() {
       newX = Math.max(0, Math.min(newX, maxX));
       newY = Math.max(0, Math.min(newY, maxY));
 
+      // Check trash collision
+      if (trashRef.current) {
+        const trashRect = trashRef.current.getBoundingClientRect();
+        // Simple center point collision check
+        const itemCenterX = newX + dragOffset.current.width / 2;
+        const itemCenterY = newY + dragOffset.current.height / 2;
+
+        const isOver = (
+          itemCenterX >= trashRect.left &&
+          itemCenterX <= trashRect.right &&
+          itemCenterY >= trashRect.top &&
+          itemCenterY <= trashRect.bottom
+        );
+        setTrashHover(isOver);
+      }
+
       setItems(prev => prev.map(it =>
         it.id === dragItem.id ? { ...it, x: newX, y: newY } : it
       ));
     };
 
     const handleEnd = (clientX, clientY) => {
+      // If dropped on trash
+      if (trashHover) {
+        remove(ref(db, `items/${dragItem.id}`));
+        setDragItem(null);
+        setTrashHover(false);
+        return;
+      }
+
       let finalX = clientX - dragOffset.current.x;
       let finalY = clientY - dragOffset.current.y;
 
@@ -190,6 +216,7 @@ function App() {
         y: finalY
       });
       setDragItem(null);
+      setTrashHover(false);
     };
 
     const onMouseMove = (e) => {
@@ -236,7 +263,7 @@ function App() {
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
     };
-  }, [dragItem]);
+  }, [dragItem, trashHover]);
 
   const commitText = () => {
     const trimmed = inputState.value.trim();
@@ -332,7 +359,21 @@ function App() {
         />
       )}
 
-      <div className="hint">Double click to add text. (v1.0)</div>
+
+
+      {/* Trash Bin */}
+      <div
+        ref={trashRef}
+        className={`trash-bin ${dragItem ? 'visible' : ''} ${trashHover ? 'active' : ''}`}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </div>
+
       <KakaoChat />
     </div>
   );
