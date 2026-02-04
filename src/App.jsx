@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import './App.css';
+import KakaoChat from './components/KakaoChat';
 
 import { db } from './firebase';
 import { ref, onValue, push, update, remove } from 'firebase/database';
@@ -256,6 +257,7 @@ function App() {
       )}
 
       <div className="hint">Double click to add text.</div>
+      <KakaoChat />
     </div>
   );
 }
