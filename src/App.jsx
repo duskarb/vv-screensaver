@@ -332,7 +332,7 @@ function App() {
         />
       )}
 
-      <div className="hint">Double click to add text.</div>
+      <div className="hint">Double click to add text. (v1.0)</div>
       <KakaoChat />
     </div>
   );
