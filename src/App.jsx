@@ -163,7 +163,7 @@ function App() {
           Math.pow(itemCenterY - trashCenterY, 2)
         );
 
-        setTrashHover(distance < 60);
+        setTrashHover(distance < 90);
       }
 
       setItems(prev => prev.map(it =>
