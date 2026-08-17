@@ -1,16 +1,72 @@
-# React + Vite
+# vv-screensaver
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**A shared digital canvas that transforms idle moments into a living screensaver.**
 
-Currently, two official plugins are available:
+vv-screensaver explores the boundary between a notes app and a passive display. Users place text fragments onto a canvas, move and resize them, and leave behind traces that remain as part of the environment.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Concept
 
-## React Compiler
+Instead of a traditional screensaver that only displays predetermined visuals, this project creates a space where user-generated information gradually becomes the visual experience.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The interface is built around simple actions:
 
-## Expanding the ESLint configuration
+- double click to create text
+- drag to move objects
+- scroll to change scale
+- edit existing text
+- drag objects into the trash area to remove them
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Features
+
+- Real-time shared text canvas using Firebase Realtime Database
+- Persistent text objects with position and size data
+- Drag and drop interaction
+- Editable floating text input
+- Idle detection mode
+- Light/dark themes
+- Responsive web interface
+
+## Interaction model
+
+```text
+User input
+    ↓
+Floating text objects
+    ↓
+Shared spatial memory
+    ↓
+Idle visual environment
+```
+
+## Tech
+
+- React 19
+- Vite
+- Firebase Realtime Database
+- CSS animations
+- Progressive Web App setup
+
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Deployment
+
+Build:
+
+```bash
+npm run build
+```
+
+Deploy:
+
+```bash
+npm run deploy
+```
+
+## Status
+
+Experimental interaction prototype exploring how everyday text input can become an ambient digital artifact.
